@@ -1,6 +1,7 @@
 import * as d3 from "d3";
 import * as React from "react";
 import { ID3Graph, ID3Node } from "../d3types";
+import "./App.css";
 import Labels from "./Labels";
 import Links from "./Links";
 import Nodes from "./Nodes";
