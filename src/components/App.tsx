@@ -1,89 +1,46 @@
-import * as d3 from "d3";
 import * as React from "react";
-import { ID3Graph, ID3Node } from "../d3types";
+import Graph from "vis-react";
 import "./App.css";
-import Labels from "./Labels";
-import Links from "./Links";
-import Nodes from "./Nodes";
 
-interface IProps {
+interface IVizProps {
   width: number;
   height: number;
-  graph: ID3Graph;
 }
 
-class App extends React.Component<IProps, {}> {
-  public simulation: any;
+export default class App extends React.Component<IVizProps, {}> {
+  public graph: any;
+  public options: any;
 
-  constructor(props: IProps) {
+  constructor(props: IVizProps) {
     super(props);
-    this.simulation = d3
-      .forceSimulation()
-      .force(
-        "link",
-        d3.forceLink().id((d: ID3Node) => {
-          return d.id;
-        })
-      )
-      .force("charge", d3.forceManyBody().strength(-100))
-      .force(
-        "center",
-        d3.forceCenter(this.props.width / 2, this.props.height / 2)
-      )
-      .nodes(this.props.graph.nodes);
-
-    this.simulation.force("link").links(this.props.graph.links);
-  }
-
-  public componentDidMount() {
-    const node = d3.selectAll(".node");
-    const link = d3.selectAll(".link");
-    const label = d3.selectAll(".label");
-
-    const ticked = () => {
-      link
-        .attr("x1", (d: any) => {
-          return d.source.x;
-        })
-        .attr("y1", (d: any) => {
-          return d.source.y;
-        })
-        .attr("x2", (d: any) => {
-          return d.target.x;
-        })
-        .attr("y2", (d: any) => {
-          return d.target.y;
-        });
-
-      node
-        .attr("cx", (d: any) => {
-          return d.x;
-        })
-        .attr("cy", (d: any) => {
-          return d.y;
-        });
-
-      label
-        .attr("x", (d: any) => {
-          return d.x + 5;
-        })
-        .attr("y", (d: any) => {
-          return d.y + 5;
-        });
+    this.graph = {
+      edges: [
+        { from: 1, to: 2 },
+        { from: 1, to: 3 },
+        { from: 2, to: 4 },
+        { from: 2, to: 5 }
+      ],
+      nodes: [
+        { id: 1, label: "Node 1" },
+        { id: 2, label: "Node 2" },
+        { id: 3, label: "Node 3" },
+        { id: 4, label: "Node 4" },
+        { id: 5, label: "Node 5" }
+      ]
     };
-    this.simulation.nodes(this.props.graph.nodes).on("tick", ticked);
+
+    this.options = {
+      edges: {
+        color: "#000000"
+      },
+
+      layout: {
+        hierarchical: true
+      }
+    };
   }
 
   public render() {
-    const { width, height, graph } = this.props;
-    return (
-      <svg className="container" width={width} height={height}>
-        <Links links={graph.links} />
-        <Nodes nodes={graph.nodes} simulation={this.simulation} />
-        <Labels nodes={graph.nodes} />
-      </svg>
-    );
+    return <Graph graph={this.graph} options={this.options} />;
   }
 }
-
-export default App;
