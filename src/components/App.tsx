@@ -1,10 +1,8 @@
 import * as d3 from "d3";
 import * as React from "react";
-import { ID3Graph, ID3Node } from "../d3types";
+import { ID3Graph } from "../d3types";
 import "./App.css";
-import Labels from "./Labels";
-import Links from "./Links";
-import Nodes from "./Nodes";
+import graphviz from "d3-graphviz";
 
 interface IProps {
   width: number;
@@ -13,75 +11,65 @@ interface IProps {
 }
 
 class App extends React.Component<IProps, {}> {
-  public simulation: any;
+  private dotSrc: string = `
+  digraph DB {
+  graph [label="Click on a cell to convert to upper/lower case" labelloc="t", fontsize="20.0" tooltip=" "]
+  rankdir=LR
+  node [shape=plain]
+  person [
+      // NOTE: The use of HREF is a workaround for '[Dot] ID="value" fails to produce id string in svg:svg output for html nodes'
+      //       See https://gitlab.com/graphviz/graphviz/issues/207
+      //       For the workaorund and more info, see http://ftp.graphviz.org/mantisbt/view.php?id=2197
+      label=< <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+                <TR><TD>Person table</TD></TR>
+                <TR><TD ID="p.id" PORT="id" HREF=" ">Person ID</TD></TR>
+                <TR><TD ID="p.fn" PORT="fn" HREF=" ">First Name</TD></TR>
+                <TR><TD ID="p.mn" PORT="mn" HREF=" ">Middle Name</TD></TR>
+                <TR><TD ID="p.ln" PORT="ln" HREF=" ">Last Name</TD></TR>
+              </TABLE> >
+  ]
+  address [
+      label=< <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD>Addresses table</TD></TR>
+          <TR><TD ID="a.id" PORT="id" HREF=" ">Address ID</TD></TR>
+          <TR><TD ID="a.pid" PORT="pid" HREF=" ">Person ID</TD></TR>
+          <TR><TD ID="a.index" PORT="index" HREF=" ">ZIP Code</TD></TR>
+          <TR><TD ID="a.street" PORT="street" HREF=" ">Street Name</TD></TR>
+          <TR><TD ID="a.house" PORT="house" HREF=" ">House Number</TD></TR>
+          <TR><TD ID="a.town" PORT="town" HREF=" ">City/Town/Village Name</TD></TR>
+          <TR><TD ID="a.state" PORT="state" HREF=" ">State Name</TD></TR>
+          <TR><TD ID="a.district" PORT="district" HREF=" ">County/District Name</TD></TR>
+          <TR><TD ID="a.country" PORT="country" HREF=" ">Country Name</TD></TR>
+        </TABLE> >
+  ]
+  phone [
+      label=< <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD>Phone Number table</TD></TR>
+          <TR><TD ID="n.pid" PORT="pid" HREF=" ">Person ID</TD></TR>
+          <TR><TD ID="n.cc" PORT="cc" HREF=" ">Country Code</TD></TR>
+          <TR><TD ID="n.ac" PORT="ac" HREF=" ">Area Code</TD></TR>
+          <TR><TD ID="n.n" PORT="n" HREF=" ">Phone Number</TD></TR>
+        </TABLE> >
+  ]
+  {phone:pid address:pid} -> person:id
+  }
+  `;
 
-  constructor(props: IProps) {
-    super(props);
-    this.simulation = d3
-      .forceSimulation()
-      .force(
-        "link",
-        d3.forceLink().id((d: ID3Node) => {
-          return d.id;
-        })
-      )
-      .force("charge", d3.forceManyBody().strength(-100))
-      .force(
-        "center",
-        d3.forceCenter(this.props.width / 2, this.props.height / 2)
-      )
-      .nodes(this.props.graph.nodes);
-
-    this.simulation.force("link").links(this.props.graph.links);
+  componentDidMount() {
+    console.log(graphviz);
+    const graph: any = d3.select(".graph");
+    graph.graphviz().renderDot(this.dotSrc);
   }
 
-  public componentDidMount() {
-    const node = d3.selectAll(".node");
-    const link = d3.selectAll(".link");
-    const label = d3.selectAll(".label");
-
-    const ticked = () => {
-      link
-        .attr("x1", (d: any) => {
-          return d.source.x;
-        })
-        .attr("y1", (d: any) => {
-          return d.source.y;
-        })
-        .attr("x2", (d: any) => {
-          return d.target.x;
-        })
-        .attr("y2", (d: any) => {
-          return d.target.y;
-        });
-
-      node
-        .attr("cx", (d: any) => {
-          return d.x;
-        })
-        .attr("cy", (d: any) => {
-          return d.y;
-        });
-
-      label
-        .attr("x", (d: any) => {
-          return d.x + 5;
-        })
-        .attr("y", (d: any) => {
-          return d.y + 5;
-        });
-    };
-    this.simulation.nodes(this.props.graph.nodes).on("tick", ticked);
-  }
-
-  public render() {
-    const { width, height, graph } = this.props;
+  render() {
     return (
-      <svg className="container" width={width} height={height}>
-        <Links links={graph.links} />
-        <Nodes nodes={graph.nodes} simulation={this.simulation} />
-        <Labels nodes={graph.nodes} />
-      </svg>
+      <div className="App">
+        <header className="App-header">
+          <h1 className="App-title">Blastcap</h1>
+        </header>
+
+        <div className="graph" />
+      </div>
     );
   }
 }
